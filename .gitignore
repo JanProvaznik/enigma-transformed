@@ -1,4 +1,8 @@
-.hidden
+*.deduped
+*.gz
+wandb
+logs
+hidden
 enigmavenv/
 # Byte-compiled / optimized / DLL files
 __pycache__/
