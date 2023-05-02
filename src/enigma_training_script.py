@@ -1,21 +1,25 @@
 import argparse
+from datasets import load_dataset
 from transformers import TrainerCallback
 import Levenshtein
 from torch.utils.data import random_split
 from transformers import T5ForConditionalGeneration, T5Config, Seq2SeqTrainingArguments, Seq2SeqTrainer
-from enigma.machine import EnigmaMachine
 import os
 from transformers import DataCollatorWithPadding, pipeline
 import datetime 
 import re
 import torch
+import torch.cuda
 from transformers import AutoTokenizer
 from transformers import Seq2SeqTrainingArguments, Seq2SeqTrainer
+from transformers import DataCollatorForSeq2Seq, AdamW, Adafactor
 from typing import List, Tuple, Dict
-from transformers import PreTrainedTokenizer
+from ciphers import encrypt_all_the_same, encrypt_random, caesar, caesar_random, caesar_random_hint
 from transformers import pipeline
-MAX_SEQ_LEN = 200
+from EditDistanceCallback import EditDistanceCallback
+MAX_SEQ_LEN = 64
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 parser = argparse.ArgumentParser()
 # These arguments will be set appropriately by ReCodEx, even if you change them.
 parser.add_argument("--batch_size", default=64, type=int, help="Batch size.")
@@ -26,6 +30,9 @@ parser.add_argument("--download_dataset", default="", type=str, help="Training d
 # parser.add_argument("--dataset_preprocessed", default=..., type=str, help="Preprocessed training data file.")
 # dataset type [constenigma, randomenigma]
 parser.add_argument("--dataset_type", default="constenigma", type=str, help="Training data file.")
+# preserve spaces
+parser.add_argument("--preserve_spaces", default=False, action="store_true", help="")
+
 
 parser.add_argument("--evaluate", default=False, action="store_true", help="")
 parser.add_argument("--epochs", default=3, type=int, help="Number of epochs.")
@@ -43,97 +50,21 @@ parser.add_argument("--lr_scheduler", default="linear", type=str, help="Learning
 parser.add_argument("--wandb", default=False, action="store_true", help="Use wandb.")
 
     
-# def download_dataset(args):
-#     # download from link and unzip to dataset_path
-#     import requests
-#     import zipfile
-
-#     url = args.download_dataset
-#     r = requests.get(url, allow_redirects=True)
-#     open('data.zip', 'wb').write(r.content)
 def only_letters(text, preserve_spaces=False):
         if preserve_spaces:
             return re.sub(r'[^A-Za-z ]+', '', text).upper()
         return re.sub(r'[^A-Za-z]+', '', text).upper()
 
-class CustomDataCollator(DataCollatorWithPadding):
-    pass
 
-# TODO don't create a new machine for sentence
-def encrypt_all_the_same(text):
-    machine = EnigmaMachine.from_key_sheet(
-       rotors='I II III',
-       reflector='B',
-       ring_settings=[0, 0, 0],
-       plugboard_settings=None)
-    start_display = 'ABC'
-    machine.set_display(start_display)
-    return f"{start_display}{machine.process_text(text)}"
-import random
-rand = random.Random(42)
-
-# TODO don't create a new machine for sentence and use randomness correctly
-def encrypt_random(text, seed=42):
-    machine = EnigmaMachine.from_key_sheet(
-        rotors='I II III',
-        reflector='B',
-        ring_settings=[0,0,0],
-        plugboard_settings=None)
-    start_display = ''.join(rand.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ') for _ in range(3))
-    machine.set_display(start_display)
-    return f"{start_display}{machine.process_text(text)}"
-
-
-# def evaluate(args, model = None,tokenizer = None, data=None):
-#     # load
-#     if model is None:
-#         model = T5ForConditionalGeneration.from_pretrained(args.model_path)
-#     if tokenizer is None:
-#         tokenizer = AutoTokenizer.from_pretrained(args.model_type)
-#     if data is None:
-#         pass
+def evaluate(args, model = None, tokenizer = None, data=None):
+    # load
+    if model is None:
+        model = T5ForConditionalGeneration.from_pretrained(args.model_path)
+    if tokenizer is None:
+        tokenizer = AutoTokenizer.from_pretrained(args.model_type)
+    if data is None:
+        pass
         # data = EnigmaDataset(args.dataset_path, encrypt_all_the_same, tokenizer, max_length=MAX_SEQ_LEN, max_sentences=args.max_sentences)
-
-# generation config 
-from transformers import GenerationConfig
-import logging 
-from transformers import PrinterCallback
-class EditDistanceCallback(PrinterCallback):
-    
-    def __init__(self, tokenizer, val_dataset):
-        self.tokenizer = tokenizer
-        self.val_dataset = val_dataset
-        self.generation_config = GenerationConfig(
-            max_length=MAX_SEQ_LEN
-        )
-
-    def on_epoch_end(self, args, state, control, model=None, **kwargs):
-        model.eval()
-        total_edit_distance = 0
-        total=0
-
-        for encrypted_tensor_sentence, tensor_sentence in zip(self.val_dataset['input_ids'], self.val_dataset['labels']):
-            # convert list to tensor
-            tensor_sentence = torch.tensor(tensor_sentence, dtype=torch.long)
-            encrypted_tensor_sentence = torch.tensor(encrypted_tensor_sentence, dtype=torch.long).unsqueeze(0)
-            with torch.no_grad():
-                outputs = model.generate(input_ids=encrypted_tensor_sentence, generation_config=self.generation_config)
-
-            decoded_pred = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            decoded_target = self.tokenizer.decode(tensor_sentence, skip_special_tokens=True)
-
-            edit_distance = Levenshtein.distance(decoded_pred, decoded_target)
-            total_edit_distance += edit_distance
-            total+=1
-            if total <5:
-                print(f"Predicted: {decoded_pred}")
-                print(f"Gold Label: {decoded_target}")
-                print("=" * 80)
-
-
-        avg_edit_distance = total_edit_distance / len(self.val_dataset)
-        print(f"Average Edit Distance on Validation Set: {avg_edit_distance}\n")
-        print("Sample 5 examples from validation set and print them")
 
 
 # load model and train it more
@@ -141,8 +72,9 @@ def train_pretrained(args):
     pass
 
 def main(args):
+
     if args.evaluate:
-        # evaluate(args)
+        evaluate(args)
         return
     
     # nice logdir name
@@ -155,32 +87,42 @@ def main(args):
     os.makedirs(args.logdir, exist_ok=True)
     if args.wandb:
         import wandb
+        # get key from os
+        key = os.environ.get("WANDB_API_KEY")
+        wandb.login(key=key)
+
         wandb.init(project="enigma-transformed", name=args.logdir)
     else:
         os.environ["WANDB_DISABLED"] = "true"
 
-
-    tokenizer = AutoTokenizer.from_pretrained(args.model_type)
+    from transformers import ByT5Tokenizer
+    tokenizer = ByT5Tokenizer()
     # check how does it handle End of sequence symbol
-    # check learning rate and if regularization is done
-    # add dropout 0.05 or 0.1
-    # first big learning rate and then smaller .01
-    # try warmup
+    # dropout 0.1 is applied automatically
+    # warmup from the paper
+    # first big learning rate 0.01, then smaller .001
+    # idk why other lr schedules would be better and how to think about it 
 
     if args.dataset_type == "constenigma":
         fn = encrypt_all_the_same
     elif args.dataset_type == "randomenigma":
         fn = encrypt_random
+    elif args.dataset_type == "constcaesar":
+        fn = caesar
+    elif args.dataset_type == "hintcaesar":
+        fn = caesar_random_hint
+    elif args.dataset_type == "randomcaesar":
+        fn = caesar_random
+    #TODO: vignere?
 
 
-    from datasets import load_dataset
     # load dataset: a file that contains one sentence per line
     line_dataset = load_dataset('text', data_files=args.dataset_path)
     # take only args.max_sentences sentences
     line_dataset = line_dataset['train'].select(range(args.max_sentences))
 
     def preprocess_dataset(examples,fn):
-        original = [only_letters(text)[:MAX_SEQ_LEN] for text in examples["text"]]
+        original = [only_letters(text, args.preserve_spaces)[:MAX_SEQ_LEN] for text in examples["text"]]
         encrypted = [fn(text)[:MAX_SEQ_LEN] for text in examples["text"]]
         return tokenizer.prepare_seq2seq_batch(encrypted, original, truncation=True,return_tensors="pt",padding='max_length', max_length=MAX_SEQ_LEN)
 
@@ -194,27 +136,40 @@ def main(args):
 
     config = T5Config.from_pretrained(args.model_type)
     config.tie_word_embeddings = False
+    # byT5-smaller -> 300m parameters to 100m
+    if args.model_type == 'google/byT5-small':
+        config.d_ff = config.d_ff // 2
+        config.d_model = config.d_model // 2
+        config.num_heads = 10
     
     # note: this is probably the same as AutoModelForSeq2SeqLM
-    model = T5ForConditionalGeneration(config)
-    
+    model = T5ForConditionalGeneration(config).to(device)
 
+    real_batch_size = 4
+    gradient_accumulation_steps = args.batch_size // real_batch_size
     # weight decay? lr? warmup?
     training_args = Seq2SeqTrainingArguments(
-        output_dir=args.logdir+"byt5_output",
+        output_dir=args.logdir+"trained_model",
         num_train_epochs=args.epochs,
-        per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.batch_size,
-        # save_steps=10_000, # ???
-        # save_total_limit=2, 
-        evaluation_strategy="epoch", # ???
+        per_device_train_batch_size=real_batch_size,
+        per_device_eval_batch_size=real_batch_size,
+        gradient_accumulation_steps=gradient_accumulation_steps,
+        optimizer_type="adafactor",
+        warmup_ratio = 0.05,
+        
+        save_steps=10_000, 
+        save_total_limit=2, 
+        evaluation_strategy="epoch",
+
         weight_decay=args.weight_decay,
         learning_rate=args.learning_rate,
     )
 
-
-    from transformers import DataCollatorForSeq2Seq, AdamW
-    optimizer = AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+    # optimizer = AdamW(model.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)
+    # optimizer = Adafactor(model.parameters(), 
+    # lr=args.learning_rate,
+    #  weight_decay=args.weight_decay
+    #  )
     data_collator = DataCollatorForSeq2Seq(tokenizer, padding='max_length',  max_length=MAX_SEQ_LEN, return_tensors="pt", model=model)
 
     trainer = Seq2SeqTrainer(
@@ -224,11 +179,11 @@ def main(args):
         eval_dataset=val_dataset,
         data_collator=data_collator,
         tokenizer=tokenizer,
-        optimizers=(optimizer, None), # ??? how to use this?
-        callbacks=[EditDistanceCallback(tokenizer, val_dataset)]
+        
+        # optimizers=(optimizer, None), # ??? how to use this?
+        callbacks=[EditDistanceCallback(tokenizer, val_dataset, train_dataset,seq_len=MAX_SEQ_LEN,device=device)] 
         
     )
-    from transformers import get_scheduler
     # s = args.lr_scheduler
     # scheduler = get_scheduler(
     #     name=s,
@@ -237,7 +192,8 @@ def main(args):
     #     optimizer=trainer.optimizer,
     # )
     # trainer.lr_scheduler = scheduler
-
+    print(torch.cuda.memory_summary())
+    torch.cuda.empty_cache()
 
     trainer.train()
 
