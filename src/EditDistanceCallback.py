@@ -10,6 +10,8 @@ class EditDistanceCallback(PrinterCallback):
         self.train_dataset = train_dataset
         self.generation_config = GenerationConfig(
             max_length=seq_len,
+            num_beams=1,
+            do_sample=False,
         )
         self.device = device
     # this is very slow :(, let's only get 100 examples
@@ -29,7 +31,7 @@ class EditDistanceCallback(PrinterCallback):
             tensor_sentences = tensor_sentences.to(self.device)
 
             with torch.no_grad():
-                outputs = model.generate(input_ids=encrypted_tensor_sentences, generation_config=self.generation_config)
+                outputs = model.generate(inputs=encrypted_tensor_sentences, generation_config=self.generation_config)
 
             for output, tensor_sentence in zip(outputs, tensor_sentences):
                 decoded_pred = self.tokenizer.decode(output, skip_special_tokens=True)

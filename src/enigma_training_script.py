@@ -136,8 +136,9 @@ def main(args):
 
     config = T5Config.from_pretrained(args.model_type)
     config.tie_word_embeddings = False
+
     # byT5-smaller -> 300m parameters to 100m
-    if args.model_type == 'google/byT5-small':
+    if args.model_type == 'google/byt5-small':
         config.d_ff = config.d_ff // 2
         config.d_model = config.d_model // 2
         config.num_heads = 10
@@ -154,14 +155,10 @@ def main(args):
         per_device_train_batch_size=real_batch_size,
         per_device_eval_batch_size=real_batch_size,
         gradient_accumulation_steps=gradient_accumulation_steps,
-        optimizer_type="adafactor",
-        warmup_ratio = 0.05,
-        
+        adafactor=True,
         save_steps=10_000, 
         save_total_limit=2, 
         evaluation_strategy="epoch",
-
-        weight_decay=args.weight_decay,
         learning_rate=args.learning_rate,
     )
 
@@ -171,6 +168,10 @@ def main(args):
     #  weight_decay=args.weight_decay
     #  )
     data_collator = DataCollatorForSeq2Seq(tokenizer, padding='max_length',  max_length=MAX_SEQ_LEN, return_tensors="pt", model=model)
+
+
+
+
 
     trainer = Seq2SeqTrainer(
         model=model,
@@ -184,6 +185,19 @@ def main(args):
         callbacks=[EditDistanceCallback(tokenizer, val_dataset, train_dataset,seq_len=MAX_SEQ_LEN,device=device)] 
         
     )
+
+    # total_train_steps = len(train_dataset) * args.epochs // (args.batch_size * gradient_accumulation_steps)
+    # warmup_steps = int(total_train_steps * 0.05)
+    
+    # # scheduler = custom_linear_schedule_with_warmup(
+    # # trainer.optimizer,
+    # # num_warmup_steps=warmup_steps,
+    # # num_training_steps=total_train_steps,
+    # # last_epoch=-1,  # start the scheduler from the beginning
+    # # )
+
+
+    # trainer.lr_scheduler = scheduler
     # s = args.lr_scheduler
     # scheduler = get_scheduler(
     #     name=s,

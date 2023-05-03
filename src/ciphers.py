@@ -12,6 +12,8 @@ def caesar_random(text):
     shift = rand.randint(0, 25)
     return caesar(text, shift)
 
+def nothing(text):
+    return text
 
 # TODO don't create a new machine for each sentence
 def encrypt_all_the_same(text):
