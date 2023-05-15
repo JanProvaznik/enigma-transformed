@@ -3,12 +3,13 @@
 wandb
 logs
 hidden
+tmp
 enigmavenv/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
+slurm-*
 # C extensions
 *.so
 

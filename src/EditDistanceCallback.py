@@ -19,9 +19,15 @@ class EditDistanceCallback(PrinterCallback):
         total_edit_distance = 0
         total = 0
         print(f"Calculating edit distance for {dataset_name}")
+        print(f'{dataset=}')
 
-        input_ids = torch.tensor(dataset['input_ids'], dtype=torch.long)
-        labels = torch.tensor(dataset['labels'], dtype=torch.long)
+        # dataset are items in form dataset[x] = {'input_ids': input_ids, 'labels': labels}
+        input_ids = torch.tensor([item['input_ids'] for item in dataset])
+        labels = torch.tensor([item['labels'] for item in dataset])
+
+        # this was here before but ignore it now
+        # input_ids = torch.tensor(dataset['input_ids'], dtype=torch.long)
+        # labels = torch.tensor(dataset['labels'], dtype=torch.long)
         tensor_dataset = TensorDataset(input_ids, labels)
         batch_size = 16
         dataloader = DataLoader(tensor_dataset, batch_size=batch_size, shuffle=False)
@@ -31,7 +37,8 @@ class EditDistanceCallback(PrinterCallback):
             tensor_sentences = tensor_sentences.to(self.device)
 
             with torch.no_grad():
-                outputs = model.generate(inputs=encrypted_tensor_sentences, generation_config=self.generation_config)
+                outputs = model.generate(encrypted_tensor_sentences, generation_config=self.generation_config)
+                print(f"{outputs=}")
 
             for output, tensor_sentence in zip(outputs, tensor_sentences):
                 decoded_pred = self.tokenizer.decode(output, skip_special_tokens=True)
@@ -42,6 +49,8 @@ class EditDistanceCallback(PrinterCallback):
                 total += 1
 
                 if total <= 5:
+                    # print(f"Tensor Sentence: {tensor_sentence}")
+                    # print(f"Output: {output}")
                     print(f"Predicted: {decoded_pred}")
                     print(f"Gold Label: {decoded_target}")
                     print("=" * 80)
@@ -63,33 +72,34 @@ class EditDistanceCallback(PrinterCallback):
 
 
 
-    # def on_epoch_end_old(self, args, state, control, model=None, **kwargs):
-        # model.eval()
-        # total_edit_distance = 0
-        # total=0
-# 
-        # for encrypted_tensor_sentence, tensor_sentence in zip(self.val_dataset['input_ids'], self.val_dataset['labels']):
+    def on_epoch_end_old(self, args, state, control, model=None, **kwargs):
+        model.eval()
+        total_edit_distance = 0
+        total=0
+        print("Calculating edit distance for validation set")
+        input_ids = [item['input_ids'] for item in self.val_dataset]
+        labels = [item['labels'] for item in self.val_dataset]
+ 
+        for encrypted_tensor_sentence, tensor_sentence in zip(input_ids, labels):
             #convert list to tensor
-            # tensor_sentence = torch.tensor(tensor_sentence, dtype=torch.long)
-            # encrypted_tensor_sentence = torch.tensor(encrypted_tensor_sentence, dtype=torch.long).unsqueeze(0)
-            # encrypted_tensor_sentence = encrypted_tensor_sentence.to(device)
-# 
-            # with torch.no_grad():
-                # outputs = model.generate(input_ids=encrypted_tensor_sentence, generation_config=self.generation_config)
-# 
-            # decoded_pred = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            # decoded_target = self.tokenizer.decode(tensor_sentence, skip_special_tokens=True)
-# 
-            # edit_distance = Levenshtein.distance(decoded_pred, decoded_target)
-            # total_edit_distance += edit_distance
-            # total+=1
-            # if total <5:
-                # print(f"Predicted: {decoded_pred}")
-                # print(f"Gold Label: {decoded_target}")
-                # print("=" * 80)
-# 
-# 
-        # avg_edit_distance = total_edit_distance / len(self.val_dataset)
-        # print(f"Average Edit Distance on Validation Set: {avg_edit_distance}\n")
-        # print("Sample 5 examples from validation set and print them")
-# 
+             tensor_sentence = torch.tensor(tensor_sentence, dtype=torch.long, device=self.device)
+             encrypted_tensor_sentence = torch.tensor(encrypted_tensor_sentence, dtype=torch.long, device=self.device).unsqueeze(0)
+ 
+             with torch.no_grad():
+                 outputs = model.generate(input_ids=encrypted_tensor_sentence, generation_config=self.generation_config)
+ 
+             decoded_pred = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+             decoded_target = self.tokenizer.decode(tensor_sentence, skip_special_tokens=True)
+ 
+             edit_distance = Levenshtein.distance(decoded_pred, decoded_target)
+             total_edit_distance += edit_distance
+             total+=1
+             if total <5:
+                 print(f"Predicted: {decoded_pred}")
+                 print(f"Gold Label: {decoded_target}")
+                 print("=" * 80)
+ 
+ 
+        avg_edit_distance = total_edit_distance / len(self.val_dataset)
+        print(f"Average Edit Distance on Validation Set: {avg_edit_distance}\n")
+        print("Sample 5 examples from validation set and print them")
