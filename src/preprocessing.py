@@ -3,7 +3,7 @@ import logging
 import re
 
 
-def generate_dataset(
+def generate_random_dataset(
     rows: int, min_length: int, max_length: int, space_frequency: float, seed: int = 42
 ) -> list[str]:
     """
