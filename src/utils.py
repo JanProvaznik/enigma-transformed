@@ -24,6 +24,7 @@ def batch_size(batch_size, memory, tokens_per_example):
     """
     #TODO implement
 
+
 def print_diffs(orig, gen):
     d = difflib.Differ()
     diff = d.compare(orig.split(), gen.split())
@@ -31,3 +32,7 @@ def print_diffs(orig, gen):
     dist_ratio = Levenshtein.distance(orig, gen) / len(orig)
 
     logging.info(orig, gen, dist_ratio , '\n'.join(diff))
+
+
+def levensthein_distance(orig, gen):
+    return Levenshtein.distance(orig, gen)

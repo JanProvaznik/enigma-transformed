@@ -5,14 +5,15 @@ import ciphers
 class ByT5Dataset:
     def __init__(self, fn, dataset, max_length) -> None:
         self.tokenizer: ByT5Tokenizer = ByT5Tokenizer.from_pretrained("google/byt5-small")
-        self.input = dataset
-        self.output = [fn(x) for x in dataset]
+        self.input = [fn(x) for x in dataset]
+        self.output = dataset
         self.max_length = max_length
 
     def __len__(self):
         return len(self.input)
 
     def __getitem__(self, idx):
+        # input_text = "DECODE "+ self.input[idx]
         input_text = self.input[idx]
         output_text = self.output[idx]
         encoding = self.tokenizer(

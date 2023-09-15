@@ -2,6 +2,7 @@ import random
 import logging
 import re
 
+logging.basicConfig(level=logging.INFO)
 
 def generate_random_dataset(
     rows: int, min_length: int, max_length: int, space_frequency: float, seed: int = 42
@@ -34,6 +35,16 @@ def generate_random_dataset(
     )
     return dataset
 
+# the same but load it from a file
+def load_dataset(rows: int, min_length: int, max_length: int, file_path: str, seed: int = 42) -> list[str]:
+    random.seed(seed)
+    with open(file_path, 'r') as f:
+        all_lines = f.readlines()
+    selected_rows = random.sample(all_lines, rows)
+    dataset = [line.strip() for line in selected_rows]
+    dataset = [line[:random.randint(min_length, max_length)] for line in dataset]
+    logging.info(f"Loaded dataset from {file_path}, containing {len(dataset)} rows, min_length={min_length}, max_length={max_length}, seed={seed}")
+    return dataset
 
 def only_letters(text, preserve_spaces=False):
     pattern = r"[^A-Za-z \n]+" if preserve_spaces else r"[^A-Za-z\n]+"
@@ -56,14 +67,14 @@ def replace_digits(text: str) -> str:
     return "".join(digit_map.get(char, char) for char in text)
 
 
-def preprocess_text(text: str, preserve_spaces: bool, convert_digits: bool) -> str:
+def preprocess_text(text: str, preserve_spaces: bool = True, convert_digits: bool = False) -> str:
     if convert_digits:
         text = replace_digits(text)
     text = only_letters(text, preserve_spaces)
     return text
 
 
-def preprocess_file(path: str, preserve_spaces: bool, convert_digits: bool) -> None:
+def preprocess_file(path: str, preserve_spaces: bool = True, convert_digits: bool = False) -> None:
     with open(path, "r+") as f:
         text = f.read()
         text = preprocess_text(text, preserve_spaces, convert_digits)

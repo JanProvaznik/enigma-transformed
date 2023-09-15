@@ -41,7 +41,10 @@ def nothing(text: str) -> str:
 
 # Caesar
 def caesar(text: str, shift: int = 3) -> str:
-    return "".join(chr((ord(c) - ord("A") + shift) % 26 + ord("A")) for c in text)
+    return "".join(
+        chr((ord(c) - ord("A") + shift) % 26 + ord("A")) if c.isalpha() else c
+        for c in text
+    )
 
 
 def caesar_random_hint(text: str) -> str:
