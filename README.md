@@ -11,7 +11,7 @@
 - add to each notebook: 
 ```
 !git clone https://github.com/JanProvaznik/enigma-transformed
-!pip install transformers[torch] Levensthein py-enigma
+!pip install transformers[torch] Levenshtein py-enigma
 ```
 
 ## Docs
