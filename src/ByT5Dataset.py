@@ -13,7 +13,6 @@ class ByT5Dataset:
         return len(self.input)
 
     def __getitem__(self, idx):
-        # input_text = "DECODE "+ self.input[idx]
         input_text = self.input[idx]
         output_text = self.output[idx]
         encoding = self.tokenizer(
@@ -40,6 +39,15 @@ class ByT5CaesarDataset(ByT5Dataset):
     def __init__(self, data, max_length) -> None:
         super().__init__(ciphers.caesar, data, max_length)
 
-# class ByT5MultiCaesarDataset(ByT5Dataset):
-#     def __init__(self, data, max_length) -> None:
-#         super().__init__(ciphers.multi_caesar, data, max_length)
+class ByT5MultiCaesarDataset(ByT5Dataset):
+    def __init__(self, data, max_length) -> None:
+        multi_caesar = ciphers.make_multi_caesar()
+        super().__init__(multi_caesar, data, max_length)
+
+class ByT5CaesarRandomDataset(ByT5Dataset):
+    def __init__(self, data, max_length) -> None:
+        super().__init__(ciphers.caesar_random, data, max_length)
+
+class ByT5CaesarRandomWithHintDataset(ByT5Dataset):
+    def __init__(self, data, max_length) -> None:
+        super().__init__(ciphers.caesar_random_hint, data, max_length)

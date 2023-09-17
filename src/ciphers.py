@@ -46,12 +46,21 @@ def caesar(text: str, shift: int = 3) -> str:
         for c in text
     )
 
+def make_multi_caesar(shifts: list[int] = [3, 8, 14]): # -> ((text: str) -> str)
+    i = 0
+    def inner(text: str) -> str:
+        nonlocal i
+        shifted = caesar(text, shifts[i])
+        i = (i + 1) % len(shifts)
+        return shifted
+    return inner
+
 
 def caesar_random_hint(text: str) -> str:
     shift = rand.randint(0, 25)
     # convert shift to char
     shift_char = chr(ord("A") + shift)
-    return f"{shift_char}{caesar(text, shift)}"
+    return f"{shift_char} {caesar(text, shift)}"
 
 
 def caesar_random(text: str) -> str:
