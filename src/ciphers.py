@@ -19,7 +19,7 @@ def create_substitution_dict(permutation: list[str]) -> dict[str, str]:
     """
     permutation is a list of letters in the alphabet
     """
-    d = {chr(ord("A") + i): permutation[i] for i in range(len(permutation))}
+    d = {chr(ord("a") + i): permutation[i] for i in range(len(permutation))}
     d[" "] = " "
     return d
 
@@ -30,7 +30,7 @@ def random_substitution(text: str) -> tuple[str, dict[str, str]]:
     substitution cipher should be invertible
     """
     perm = np.random.permutation(26)
-    perm_str = [chr(ord("A") + i) for i in perm]
+    perm_str = [chr(ord("a") + i) for i in perm]
     mapping = create_substitution_dict(perm_str)
     return (substitute(text, mapping), mapping)
 
@@ -42,7 +42,7 @@ def nothing(text: str) -> str:
 # Caesar
 def caesar(text: str, shift: int = 3) -> str:
     return "".join(
-        chr((ord(c) - ord("A") + shift) % 26 + ord("A")) if c.isalpha() else c
+        chr((ord(c) - ord("a") + shift) % 26 + ord("a")) if c.isalpha() else c
         for c in text
     )
 
@@ -59,7 +59,7 @@ def make_multi_caesar(shifts: list[int] = [3, 8, 14]): # -> ((text: str) -> str)
 def caesar_random_hint(text: str) -> str:
     shift = rand.randint(0, 25)
     # convert shift to char
-    shift_char = chr(ord("A") + shift)
+    shift_char = chr(ord("a") + shift)
     return f"{shift_char} {caesar(text, shift)}"
 
 

@@ -20,7 +20,7 @@ def generate_random_dataset(
     """
     random.seed(seed)
     letter_weight_without_space = (1 - space_frequency) / 26
-    letters = " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    letters = " abcdefghijklmnopqrstuvwxyz"
     letter_weights = [space_frequency] + [
         letter_weight_without_space for _ in range(26)
     ]
@@ -48,21 +48,21 @@ def load_dataset(rows: int, min_length: int, max_length: int, file_path: str, se
 
 def only_letters(text, preserve_spaces=False):
     pattern = r"[^A-Za-z \n]+" if preserve_spaces else r"[^A-Za-z\n]+"
-    return re.sub(pattern, "", text).upper()
+    return re.sub(pattern, "", text).lower()
 
 
 def replace_digits(text: str) -> str:
     digit_map = {
-        "1": "ONE",
-        "2": "TWO",
-        "3": "THREE",
-        "4": "FOUR",
-        "5": "FIVE",
-        "6": "SIX",
-        "7": "SEVEN",
-        "8": "EIGHT",
-        "9": "NINE",
-        "0": "ZERO",
+        "1": "one",
+        "2": "two",
+        "3": "three",
+        "4": "four",
+        "5": "five",
+        "6": "six",
+        "7": "seven",
+        "8": "eight",
+        "9": "nine",
+        "0": "zero",
     }
     return "".join(digit_map.get(char, char) for char in text)
 
