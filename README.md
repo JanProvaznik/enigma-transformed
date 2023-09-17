@@ -21,7 +21,7 @@
 
 ## Usual experiment pipeline
 0. get data from the internet
-2. preprocess the data: only A-Z + spaces, trim/pad to desired length
+2. preprocess the data: only a-z + spaces, trim/pad to desired length
 3. make *training pairs*: take each line of preprocessed data and encrypt it using an encryption algorithm, (unencrypted, encrypted), also possible to add a prefix/suffix
 4. create a model, set hyperparameters
 5. train the model on the training pairs

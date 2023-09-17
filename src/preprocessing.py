@@ -76,10 +76,10 @@ def preprocess_text(text: str, preserve_spaces: bool = True, convert_digits: boo
 
 def preprocess_file(path: str, preserve_spaces: bool = True, convert_digits: bool = False) -> None:
     with open(path, "r+") as f:
-        text = f.read()
-        text = preprocess_text(text, preserve_spaces, convert_digits)
+        text = f.readlines()
+        text = [preprocess_text(line, preserve_spaces, convert_digits) for line in text]
         f.seek(0)
-        f.write(text)
+        f.writelines(text)
         f.truncate()
     logging.info(
         f"Preprocessed file {path}, removed special characters, {convert_digits=}, {preserve_spaces=}"
