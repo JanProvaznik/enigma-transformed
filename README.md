@@ -8,6 +8,11 @@
 
 ### Colab
 - clone this repo and use the desired `.ipynb` files
+- add to each notebook: 
+```
+!git clone https://github.com/JanProvaznik/enigma-transformed
+!pip install transformers[torch] Levensthein py-enigma
+```
 
 ## Docs
 1. The **reproducible** directory for each experiment contians it's script and the results and link to the trained model
