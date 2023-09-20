@@ -85,6 +85,9 @@ def preprocess_file(path: str, preserve_spaces: bool = True, convert_digits: boo
         f"Preprocessed file {path}, removed special characters, {convert_digits=}, {preserve_spaces=}"
     )
 
+def prepend_hello(text: str) -> str:
+    return "hello " + text
+
 def test_preprocess_text():
     assert only_letters("abc! 123", True) == "ABC "
     assert only_letters("abc! 123", False) == "ABC"

@@ -59,8 +59,9 @@ def make_multi_caesar(shifts: list[int] = [3, 8, 14]): # -> ((text: str) -> str)
 def caesar_random_hint(text: str) -> str:
     shift = rand.randint(0, 25)
     # convert shift to char
-    shift_char = chr(ord("a") + shift)
-    return f"{shift_char} {caesar(text, shift)}"
+    # hint is shifted 'hello'
+    hint = caesar("hello", shift)
+    return f"{hint} {caesar(text, shift)}"
 
 
 def caesar_random(text: str) -> str:
