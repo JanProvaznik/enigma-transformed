@@ -89,12 +89,12 @@ def prepend_hello(text: str) -> str:
     return "hello " + text
 
 def test_preprocess_text():
-    assert only_letters("abc! 123", True) == "ABC "
-    assert only_letters("abc! 123", False) == "ABC"
-    # Test replace_digits
-    assert replace_digits("123") == "ONETWOTHREE"
-    # Test preprocess
-    assert preprocess_text("abc! 123", True, True) == "ABC ONETWOTHREE"
-    assert preprocess_text("abc! 123", False, False) == "ABC"
+    assert only_letters("abc! 123", True) == "abc "
+    assert only_letters("abc! 123", False) == "abc"
+    # test replace_digits
+    assert replace_digits("123") == "onetwothree"
+    # test preprocess
+    assert preprocess_text("abc! 123", True, True) == "abc onetwothree"
+    assert preprocess_text("abc! 123", False, False) == "abc"
 
     logging.info("preprocess tests passed.")

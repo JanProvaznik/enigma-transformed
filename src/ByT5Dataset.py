@@ -3,9 +3,9 @@ import ciphers
 
 
 class ByT5Dataset:
-    def __init__(self, fn, dataset, max_length) -> None:
+    def __init__(self, ciphertext_preprocess_fn, dataset, max_length) -> None:
         self.tokenizer: ByT5Tokenizer = ByT5Tokenizer.from_pretrained("google/byt5-small")
-        self.input = [fn(x) for x in dataset]
+        self.input = [ciphertext_preprocess_fn(x) for x in dataset]
         self.output = dataset
         self.max_length = max_length
 

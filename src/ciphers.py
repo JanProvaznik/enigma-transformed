@@ -5,6 +5,7 @@ from enigma.machine import EnigmaMachine
 rand = random.Random(42)
 
 
+# arbitrary substitution cipher
 def substitute(text: str, mapping: dict[str, str]):
     """
     mapping is a dict that for each letter in the alphabet
@@ -24,7 +25,6 @@ def create_substitution_dict(permutation: list[str]) -> dict[str, str]:
     return d
 
 
-# this should be impossible to crack without frequence analysis on large dataset
 def random_substitution(text: str) -> tuple[str, dict[str, str]]:
     """
     substitution cipher should be invertible
@@ -46,13 +46,19 @@ def caesar(text: str, shift: int = 3) -> str:
         for c in text
     )
 
-def make_multi_caesar(shifts: list[int] = [3, 8, 14]): # -> ((text: str) -> str)
+
+def make_multi_caesar(shifts: list[int] = [3, 8, 14]):  # -> ((text: str) -> str)
+    """
+    each time the inner function is called, it shifts by the next shift in the list
+    """
     i = 0
+
     def inner(text: str) -> str:
         nonlocal i
         shifted = caesar(text, shifts[i])
         i = (i + 1) % len(shifts)
         return shifted
+
     return inner
 
 
@@ -83,4 +89,4 @@ def enigma_encrypt_all_the_same(
             plugboard_settings=None,
         )
     machine.set_display(start_display)
-    return f"{start_display}{machine.process_text(text)}"
+    return f"{machine.process_text(text)}"
