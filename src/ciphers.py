@@ -1,6 +1,7 @@
 import random
 import numpy as np
 from enigma.machine import EnigmaMachine
+from preprocessing import prepend_hello
 
 rand = random.Random(42)
 
@@ -62,12 +63,9 @@ def make_multi_caesar(shifts: list[int] = [3, 8, 14]):  # -> ((text: str) -> str
     return inner
 
 
-def caesar_random_hint(text: str) -> str:
+def caesar_random_hello_hint(text: str) -> str:
     shift = rand.randint(0, 25)
-    # convert shift to char
-    # hint is shifted 'hello'
-    hint = caesar("hello", shift)
-    return f"{hint} {caesar(text, shift)}"
+    return caesar(prepend_hello(text), shift)
 
 
 def caesar_random(text: str) -> str:
