@@ -45,6 +45,11 @@
 
 `run_notebook.sh` - script for running a notebook on a slurm cluster 
 
+#### divergent
+- for exploratory code/experiments that don't fit into the project anymore
+##### lens_train.py: 
+- script to replicate reproducible/03 with [TransformerLens](https://github.com/neelnanda-io/TransformerLens) library and minimal amount of resources (only 1 layer transformer)
+
 
 ## Usual experiment pipeline
 0. get data from the internet or generate it
