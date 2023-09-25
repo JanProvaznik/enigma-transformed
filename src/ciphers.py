@@ -1,5 +1,4 @@
 import random
-import numpy as np
 from enigma.machine import EnigmaMachine
 from preprocessing import prepend_hello
 from typing import Callable
@@ -31,7 +30,7 @@ def random_substitution(text: str) -> tuple[str, dict[str, str]]:
     Input: text
     Output: tuple of (text, mapping)
     """
-    perm = np.random.permutation(26)
+    perm = random.sample(range(26),26)
     perm_str = [chr(ord("a") + i) for i in perm]
     mapping = create_substitution_dict(perm_str)
     return (substitute(text, mapping), mapping)
