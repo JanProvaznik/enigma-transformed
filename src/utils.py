@@ -36,3 +36,18 @@ def print_diffs(orig, gen):
 
 def levensthein_distance(orig, gen):
     return Levenshtein.distance(orig, gen)
+
+
+def print_avg_median_mode_error(error_counts: list[int]) -> tuple[float, float, int]:
+    """
+    Print average, median and mode of error count for each example
+    Input: list of error counts
+    Output: tuple of average, median and mode
+    """
+    avg_error = sum(error_counts) / len(error_counts)
+    median_error = sorted(error_counts)[len(error_counts) // 2]
+    mode_error = max(set(error_counts), key=error_counts.count)
+    print(f"Average errors: {avg_error}")
+    print(f"Median errors: {median_error}")
+    print(f"Mode errors: {mode_error}")
+    return avg_error, median_error, mode_error
