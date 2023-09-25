@@ -4,18 +4,20 @@ import re
 
 logging.basicConfig(level=logging.INFO)
 
+
 def generate_random_dataset(
     rows: int, min_length: int, max_length: int, space_frequency: float, seed: int = 42
 ) -> list[str]:
-    """
-    params:
+    """Samples a random dataset from the alphabet [a-z] (uniformly) and space which can be given custom probability.
+
+    Input:
         rows: number of rows in the dataset
         min_length: minimum character length of a row
         max_length: maximum character length of a row
         space_frequency: how big proportion of the text should be spaces?
         seed: random seed
 
-    returns:
+    Output:
         dataset: dataset as a python list of strings
     """
     random.seed(seed)
@@ -35,23 +37,42 @@ def generate_random_dataset(
     )
     return dataset
 
-# the same but load it from a file
-def load_dataset(rows: int, min_length: int, max_length: int, file_path: str, seed: int = 42) -> list[str]:
+
+def load_dataset(
+    rows: int, min_length: int, max_length: int, file_path: str, seed: int = 42
+) -> list[str]:
+    """Samples a dataset from a file and truncates each rows to a random length generated for it from a range.
+
+    Input:
+        rows: number of desired rows in the dataset
+        min_length: minimum character length of a row truncation
+        max_length: maximum character length of a row truncation
+        file_path: path to the file
+        seed: random seed for sampling and generating truncations
+
+    Output:
+        dataset: dataset as a python list of strings
+    """
     random.seed(seed)
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         all_lines = f.readlines()
     selected_rows = random.sample(all_lines, rows)
     dataset = [line.strip() for line in selected_rows]
-    dataset = [line[:random.randint(min_length, max_length)] for line in dataset]
-    logging.info(f"Loaded dataset from {file_path}, containing {len(dataset)} rows, min_length={min_length}, max_length={max_length}, seed={seed}")
+    dataset = [line[: random.randint(min_length, max_length)] for line in dataset]
+    logging.info(
+        f"Loaded dataset from {file_path}, containing {len(dataset)} rows, min_length={min_length}, max_length={max_length}, seed={seed}"
+    )
     return dataset
 
+
 def only_letters(text, preserve_spaces=False):
+    """Removes all non-letter characters from the text, optionally preserving spaces."""
     pattern = r"[^A-Za-z \n]+" if preserve_spaces else r"[^A-Za-z\n]+"
     return re.sub(pattern, "", text).lower()
 
 
 def replace_digits(text: str) -> str:
+    """Replaces digits with their textual representation."""
     digit_map = {
         "1": "one",
         "2": "two",
@@ -67,14 +88,20 @@ def replace_digits(text: str) -> str:
     return "".join(digit_map.get(char, char) for char in text)
 
 
-def preprocess_text(text: str, preserve_spaces: bool = True, convert_digits: bool = False) -> str:
+def preprocess_text(
+    text: str, preserve_spaces: bool = True, convert_digits: bool = False
+) -> str:
+    """Preprocesses the text by removing special characters, optionally preserving spaces and converting digits to their textual representation."""
     if convert_digits:
         text = replace_digits(text)
     text = only_letters(text, preserve_spaces)
     return text
 
 
-def preprocess_file(path: str, preserve_spaces: bool = True, convert_digits: bool = False) -> None:
+def preprocess_file(
+    path: str, preserve_spaces: bool = True, convert_digits: bool = False
+) -> None:
+    """Preprocesses the file by removing special characters, optionally preserving spaces and converting digits to their textual representation."""
     with open(path, "r+") as f:
         text = f.readlines()
         text = [preprocess_text(line, preserve_spaces, convert_digits) for line in text]
@@ -85,16 +112,7 @@ def preprocess_file(path: str, preserve_spaces: bool = True, convert_digits: boo
         f"Preprocessed file {path}, removed special characters, {convert_digits=}, {preserve_spaces=}"
     )
 
+
 def prepend_hello(text: str) -> str:
+    """Prepends 'hello' to the text."""
     return "hello " + text
-
-def test_preprocess_text():
-    assert only_letters("abc! 123", True) == "abc "
-    assert only_letters("abc! 123", False) == "abc"
-    # test replace_digits
-    assert replace_digits("123") == "onetwothree"
-    # test preprocess
-    assert preprocess_text("abc! 123", True, True) == "abc onetwothree"
-    assert preprocess_text("abc! 123", False, False) == "abc"
-
-    logging.info("preprocess tests passed.")
