@@ -1,6 +1,8 @@
 import os
 import Levenshtein
 import logging
+import torch.cuda
+from math import floor
 
 
 def download_newscrawl(year=2012, language="en") -> None:
@@ -22,23 +24,27 @@ def download_newscrawl(year=2012, language="en") -> None:
     )
 
 
-def batch_size(
-    target_batch_size: int, memory: int, tokens_per_example: int
+def calculate_batch_size(
+    target_batch_size: int, tokens_per_example: int
 ) -> tuple[int, int]:
     """
     Input:
         target_batch_size: effective batch size we want to achieve
-        memory: memory in GB
         tokens_per_example: number of tokens in each example
 
     output: (batch_size, gradient_accumulation_steps) that will fit in memory
 
-    Reference: for 10G memory and 50 tokens per example we would return (16, 16)
+    Reference: for 10G memory and 100 tokens per example we would return (16, 16)
     NOTE: this holds only for the ByT5-small model and the default Seq2Seq traning scheme
 
     """
-    reference_chars_per_gb = 50 * 16 // 10
-    batch_size = memory * reference_chars_per_gb // tokens_per_example
+    memory_GB = torch.cuda.mem_get_info()[0] // (1024**3)
+
+    reference_chars_per_gb = 100 * 16 // 10
+    batch_size = min(
+        target_batch_size,
+        floor(memory_GB * reference_chars_per_gb) // tokens_per_example,
+    )
     gradient_accumulation_steps = target_batch_size // batch_size
     return batch_size, gradient_accumulation_steps
 
