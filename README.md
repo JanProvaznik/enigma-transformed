@@ -37,6 +37,11 @@ This project explores the possibility of using a pretrained language model to de
     - `07_all_caesar_hint_news.ipynb` - trains model to decrypt all caesar ciphers (26 settings) on news sentences given that the first word is known (this can be interpreted as a task prefix)
     - `08_all_caesar_news.ipynb` - trains model to decrypt all caesar ciphers (26 settings) on news sentences
         - first model that does not have a clear explanation how it works 
+    - `09_vignere2_news` - trains model to decrypt constant 2 letter vignere cipher on news sentences
+    - `10_vignere3_news` - trains model to decrypt constant 3 letter vignere cipher on news sentences
+    - `11_vignere_long_news` - trains model to decrypt constant vignere cipher with key 'helloworld' on news sentences
+    - `12_vignere_multiple_news` - trains model to decrypt 2 letter vignere cipher, with 3 settings on news sentences
+
 
 #### run_notebook.sh
 - script for running a notebook on a slurm cluster 
