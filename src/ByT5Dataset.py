@@ -1,8 +1,9 @@
+import random
+import functools
 from transformers import ByT5Tokenizer
+from torch.utils.data import Dataset
 import ciphers
 from preprocessing import prepend_hello
-import functools
-from torch.utils.data import Dataset
 
 
 class ByT5Dataset(Dataset):
@@ -78,8 +79,10 @@ class ByT5CaesarDataset(ByT5DatasetOnlyPreprocessCiphertext):
     Dataset using Caesar cipher preprocessing.
     """
 
-    def __init__(self, data, max_length) -> None:
-        super().__init__(ciphers.caesar, data, max_length)
+    def __init__(self, data, max_length, shift=3) -> None:
+        super().__init__(
+            functools.partial(ciphers.caesar, shift=shift), data, max_length
+        )
 
 
 class ByT5MultiCaesarDataset(ByT5DatasetOnlyPreprocessCiphertext):
@@ -89,6 +92,22 @@ class ByT5MultiCaesarDataset(ByT5DatasetOnlyPreprocessCiphertext):
 
     def __init__(self, data, max_length) -> None:
         multi_caesar = ciphers.make_multi_caesar()
+        super().__init__(multi_caesar, data, max_length)
+
+
+class ByT5RiggedCaesarDataset(ByT5DatasetOnlyPreprocessCiphertext):
+    """
+    Dataset using Caesar cipher that uses all but one setting.
+    """
+
+    def __init__(self, data, max_length, excluded_shift) -> None:
+        shifts = list(range(26))
+        # random shuffle
+        random.shuffle(shifts)
+
+        shifts.remove(excluded_shift)
+
+        multi_caesar = ciphers.make_multi_caesar(shifts=shifts)
         super().__init__(multi_caesar, data, max_length)
 
 
@@ -158,3 +177,13 @@ class ByT5LongVignereDataset(ByT5DatasetOnlyPreprocessCiphertext):
         # make a closure that returns a vignere cipher when key="helloworld"
         long_vignere = functools.partial(ciphers.vignere, key=key)
         super().__init__(long_vignere, data, max_length)
+
+
+class ByT5ConstEnigmaDataset(ByT5DatasetOnlyPreprocessCiphertext):
+    """
+    Dataset using Enigma cipher with a constant key.
+    """
+
+    def __init__(self, data, max_length) -> None:
+        const_enigma = ciphers.make_const_enigma()
+        super().__init__(const_enigma, data, max_length)

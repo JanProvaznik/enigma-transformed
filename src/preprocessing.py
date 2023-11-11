@@ -33,13 +33,18 @@ def generate_random_dataset(
             "".join(random.choices(letters, weights=letter_weights, k=length))
         )
     logging.info(
-        f"Generated dataset with {rows} rows, min_length={min_length}, max_length={max_length}, space_frequency={space_frequency}, seed={seed}"
+        "Generated dataset with %d rows, min_length=%d, max_length=%d, space_frequency=%f, seed=%d",
+        rows,
+        min_length,
+        max_length,
+        space_frequency,
+        seed,
     )
     return dataset
 
 
 def load_dataset(
-    rows: int, min_length: int, max_length: int, file_path: str, seed: int = 42
+    rows: int, min_length: int, max_length: int, file_path: str, seed: int = 42, exclude_length: int = None
 ) -> list[str]:
     """Samples a dataset from a file and truncates each rows to a random length generated for it from a range.
 
@@ -49,18 +54,26 @@ def load_dataset(
         max_length: maximum character length of a row truncation
         file_path: path to the file
         seed: random seed for sampling and generating truncations
+        exclude_length: exclude rows with less than this length
 
     Output:
         dataset: dataset as a python list of strings
     """
     random.seed(seed)
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
         all_lines = f.readlines()
+    if exclude_length is not None:
+        all_lines = [line for line in all_lines if len(line) >= exclude_length]
     selected_rows = random.sample(all_lines, rows)
     dataset = [line.strip() for line in selected_rows]
     dataset = [line[: random.randint(min_length, max_length)] for line in dataset]
     logging.info(
-        f"Loaded dataset from {file_path}, containing {len(dataset)} rows, min_length={min_length}, max_length={max_length}, seed={seed}"
+        "Loaded dataset from %s, containing %d rows, min_length=%d, max_length=%d, seed=%d",
+        file_path,
+        len(dataset),
+        min_length,
+        max_length,
+        seed,
     )
     return dataset
 
@@ -102,14 +115,17 @@ def preprocess_file(
     path: str, preserve_spaces: bool = True, convert_digits: bool = False
 ) -> None:
     """Preprocesses the file by removing special characters, optionally preserving spaces and converting digits to their textual representation."""
-    with open(path, "r+") as f:
+    with open(path, "r+", encoding="utf-8") as f:
         text = f.readlines()
         text = [preprocess_text(line, preserve_spaces, convert_digits) for line in text]
         f.seek(0)
         f.writelines(text)
         f.truncate()
     logging.info(
-        f"Preprocessed file {path}, removed special characters, {convert_digits=}, {preserve_spaces=}"
+        "Preprocessed file %s, removed special characters, convert_digits=%s, preserve_spaces=%s",
+        path,
+        convert_digits,
+        preserve_spaces,
     )
 
 

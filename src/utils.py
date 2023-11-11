@@ -1,8 +1,8 @@
 import os
-import Levenshtein
 import logging
-import torch.cuda
 from math import floor
+import Levenshtein
+import torch.cuda
 
 
 def download_newscrawl(year=2012, language="en") -> None:
