@@ -4,8 +4,14 @@
 This project explores the possibility of using a pretrained language model to decrypt ciphers. The aim is also to discover what linguistic features of a text the model learns to use by varying the test set and measuring accuracy.
 
 
+
 ## Docs
 ### How to run 
+- get dependencies and install local code
+```
+pip install -r requirements.txt
+pip install -e .
+```
 #### Slurm cluster
 - basic setting: `sbatch -p gpu -c1 --gpus=1 --mem=16G <bash_script_path>`
 - use `run_notebook.sh <notebook_path>` to run a Jupyter notebook on a slurm cluster
@@ -103,3 +109,5 @@ This project explores the possibility of using a pretrained language model to de
 #### learning rate
 - has to be quite high because we're not fine-tuning for a language task but for a quite strange translaton
 - usually use the huggingface default LR schedule for `Seq2SeqTrainer` (linear decay); and set relative warmup (e.g. 0.2 of total steps) 
+
+

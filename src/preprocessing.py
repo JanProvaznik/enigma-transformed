@@ -1,6 +1,8 @@
 import random
 import logging
 import re
+from unidecode import unidecode
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -80,8 +82,11 @@ def load_dataset(
 
 def only_letters(text, preserve_spaces=False):
     """Removes all non-letter characters from the text, optionally preserving spaces."""
+    text = unidecode(text)
     pattern = r"[^A-Za-z \n]+" if preserve_spaces else r"[^A-Za-z\n]+"
-    return re.sub(pattern, "", text).lower()
+    text = re.sub(pattern, "", text).lower().strip()
+    single_spaced_text = re.sub(r'\s+', ' ', text)
+    return single_spaced_text
 
 
 def replace_digits(text: str) -> str:
@@ -132,3 +137,32 @@ def preprocess_file(
 def prepend_hello(text: str) -> str:
     """Prepends 'hello' to the text."""
     return "hello " + text
+
+
+def weird(text: str) -> bool:
+    """Returns True if the text is weird, False otherwise.
+    
+    Text is weird if any of the following conditions are met:
+    starts with 'European markets'
+    starts with 'Replacements:
+    starts with 'Match details':
+    contains 'http://'
+    contains 'https://'
+    contains more than 20 digits
+    contains more than 15 commas or periods
+    """
+    if text.startswith(('European markets', 'Replacements:', 'Match details')):
+        return True
+    if 'http://' in text or 'https://' in text:
+        return True
+
+    # Count digits
+    if sum(c.isdigit() for c in text) > 20:
+        return True
+
+    # Count commas and periods
+    comma_period_count = text.count(',') + text.count('.')
+    if comma_period_count > 15:
+        return True
+
+    return False

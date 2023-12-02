@@ -1,8 +1,7 @@
 #!/bin/sh
-#SBATCH --partition=gpu
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=16G
+#SBATCH --partition=cpu
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=32G
 set -eux
 date
 name=$1
@@ -19,6 +18,5 @@ script_name=script_"$SLURM_JOB_ID".py
 mv "$name_without_extension".py "$logdir"/"$script_name"
 python "$logdir"/"$script_name"
 
-
-# copy the script to the log directory, with appended slurm job id
 date
+# copy the script to the log directory, with appended slurm job id

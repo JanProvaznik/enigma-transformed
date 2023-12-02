@@ -3,6 +3,7 @@ import logging
 from math import floor
 import Levenshtein
 import torch.cuda
+import fasttext
 
 
 def download_newscrawl(year=2012, language="en") -> None:
@@ -67,3 +68,25 @@ def print_avg_median_mode_error(error_counts: list[int]) -> tuple[float, float, 
     print(f"Median errors: {median_error}")
     print(f"Mode errors: {mode_error}")
     return avg_error, median_error, mode_error
+
+
+def create_detect_language(lang="en"):
+    """Create a function that detects the language of a given text
+
+    Input: lang: language to detect
+    Output: function that takes a string and returns True if the language is lang
+    """
+    model_path = 'lid.176.bin'  # Replace with the path to the FastText model
+    # if model is not available wget it
+    if not os.path.exists(model_path):
+        os.system(f"wget https://dl.fbaipublicfiles.com/fasttext/supervised-models/{model_path}")
+    
+    model = fasttext.load_model(model_path)
+
+    def detect_language(text):
+        # print('\n' in text.strip())
+        # return 'aabb'
+        detected = model.predict(text.strip())[0][0][-2:]   # the last two characters are the language in the label
+        return detected == lang
+    
+    return detect_language
