@@ -1,7 +1,7 @@
 import random
 from typing import Callable
 from enigma.machine import EnigmaMachine
-from preprocessing import prepend_hello
+from src.preprocessing import prepend_hello
 
 rand = random.Random(42)
 

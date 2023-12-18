@@ -2,8 +2,8 @@ import random
 import functools
 from transformers import ByT5Tokenizer
 from torch.utils.data import Dataset
-import ciphers
-from preprocessing import prepend_hello
+import src.ciphers as ciphers
+from src.preprocessing import prepend_hello
 
 
 class ByT5Dataset(Dataset):
