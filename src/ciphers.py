@@ -1,9 +1,22 @@
 import random
-from typing import Callable
+from typing import Callable, Optional
 from enigma.machine import EnigmaMachine
 from src.preprocessing import prepend_hello
 
 rand = random.Random(42)
+
+
+def generate_random_key(length: int) -> str:
+    """Generates a random key of specified length."""
+    return "".join(chr(rand.randint(ord("a"), ord("z"))) for _ in range(length))
+
+
+def add_noise_to_text(text: str, noise_proportion: float) -> str:
+    """Adds random noise to the text."""
+    return "".join(
+        c if rand.random() > noise_proportion else chr(rand.randint(ord("a"), ord("z")))
+        for c in text
+    )
 
 
 # arbitrary substitution cipher
@@ -30,7 +43,7 @@ def random_substitution(text: str) -> tuple[str, dict[str, str]]:
     Input: text
     Output: tuple of (text, mapping)
     """
-    perm = random.sample(range(26), 26)
+    perm = rand.sample(range(26), 26)
     perm_str = [chr(ord("a") + i) for i in perm]
     mapping = create_substitution_dict(perm_str)
     return (substitute(text, mapping), mapping)
@@ -54,13 +67,15 @@ def caesar(text: str, shift: int = 3) -> str:
 
 
 def make_multi_caesar(
-    shifts: list[int] = [3, 8, 14]
+    shifts: Optional[list[int]] = None
 ) -> Callable:  # -> ((text: str) -> str)
     """Creates a closure that shifts by the next shift in the list each time it's called
 
     Input: list of shifts
     Output: function that shifts by the next shift in the list each time it's called
     """
+    if shifts is None:
+        shifts = [3, 8, 14]
     i = 0
 
     def inner(text: str) -> str:
@@ -72,19 +87,25 @@ def make_multi_caesar(
     return inner
 
 
-def make_const_enigma(ring_setting = [3, 22, 12], display="WXC") -> Callable:
+def make_const_enigma(
+    ring_setting: Optional[list[int]] = None,
+    display: str = "WXC",
+    noise_proportion: Optional[float] = None,
+) -> Callable:
     """Creates a closure that encrypts text using an enigma machine with the same settings each time it's called
-    
-    Input: enigma machine ring settings, display
+
+    Input: enigma machine ring settings, display, noise proportion
     Output: function that shifts by the next shift in the list each time it's called
 
     WARNING: non-letter characters are converted to 'X'
     """
+    if ring_setting is None:
+        ring_setting = [1, 20, 11]
 
     machine = EnigmaMachine.from_key_sheet(
         rotors="II IV V",
         reflector="B",
-        ring_settings=[1, 20, 11],
+        ring_settings=ring_setting,
         # plugboard_settings='AV BS CG DL FU HZ IN KM OW' # let's not use this for simplicity
     )
 
@@ -92,8 +113,10 @@ def make_const_enigma(ring_setting = [3, 22, 12], display="WXC") -> Callable:
         nonlocal machine
         nonlocal display
         machine.set_display(display)
+        if noise_proportion:
+            text = add_noise_to_text(text, noise_proportion)
         shifted = f"{machine.process_text(text)}"
-        return shifted.lower() # the process_text function returns uppercase
+        return shifted.lower()  # the process_text function returns uppercase
 
     return inner
 
@@ -148,11 +171,13 @@ def vignere3(text: str, key: str = "cmx") -> str:
     return vignere(text, key)
 
 
-def make_multi_vignere(keys: list[str] = ["bm", "xp", "ek"]) -> Callable:
+def make_multi_vignere(keys: Optional[list[str]] = None) -> Callable:
     """Creates a closure that applies vignere with a key and changes the key with each application
     Input: list of keys
     Output: function that can be used to roll through the keys and apply vignere
     """
+    if keys is None:
+        keys = ["bm", "xp", "ek"]
     i = 0
 
     def inner(text: str) -> str:
@@ -164,8 +189,35 @@ def make_multi_vignere(keys: list[str] = ["bm", "xp", "ek"]) -> Callable:
     return inner
 
 
+def random_vignere(text: str, key_length: int) -> str:
+    """Vigenère cipher with a random key of specified length."""
+    key = generate_random_key(key_length)
+    return vignere(text, key)
+
+
+def noisy_random_vignere(
+    text: str, key_length: int, noise_proportion: float = 0.1
+) -> str:
+    """Vigenère cipher with a random key of specified length and noise."""
+    noisy_text = add_noise_to_text(text, noise_proportion)
+    return random_vignere(noisy_text, key_length)
+
+
 def random_vignere2(text: str) -> str:
-    """Vignere cipher with a random 2-letter key"""
-    k1 = chr(rand.randint(ord("a"), ord("z")))
-    k2 = chr(rand.randint(ord("a"), ord("z")))
-    return vignere2(text, f"{k1}{k2}")
+    """Vigenère cipher with a random 2-letter key."""
+    return random_vignere(text, 2)
+
+
+def random_vignere3(text: str) -> str:
+    """Vigenère cipher with a random 3-letter key."""
+    return random_vignere(text, 3)
+
+
+def noisy_random_vignere2(text: str, noise_proportion: float = 0.1) -> str:
+    """Vigenère cipher with a random 2-letter key and noise."""
+    return noisy_random_vignere(text, 2, noise_proportion)
+
+
+def noisy_random_vignere3(text: str, noise_proportion: float = 0.1) -> str:
+    """Vigenère cipher with a random 3-letter key and noise."""
+    return noisy_random_vignere(text, 3, noise_proportion)
