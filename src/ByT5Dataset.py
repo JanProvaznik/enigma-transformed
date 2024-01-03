@@ -48,9 +48,9 @@ class ByT5Dataset(Dataset):
             return_tensors="pt",
         )
         return {
-            "input_ids": encoding["input_ids"].squeeze(),
-            "labels": encoding_labels["input_ids"].squeeze(),
-            "attention_mask": encoding["attention_mask"].squeeze(),
+            "input_ids": encoding["input_ids"].squeeze(), # type: ignore
+            "labels": encoding_labels["input_ids"].squeeze(), # type: ignore
+            "attention_mask": encoding["attention_mask"].squeeze(), # type: ignore
             "input_text": input_text,
             "output_text": output_text,
         }
@@ -187,3 +187,21 @@ class ByT5ConstEnigmaDataset(ByT5DatasetOnlyPreprocessCiphertext):
     def __init__(self, data, max_length) -> None:
         const_enigma = ciphers.make_const_enigma()
         super().__init__(const_enigma, data, max_length)
+
+class ByT5NoisyConstEnigmaDataset(ByT5DatasetOnlyPreprocessCiphertext):
+    """
+    Dataset using Enigma cipher with a constant key and noise.
+    """
+
+    def __init__(self, data, max_length, noise_proportion=.1) -> None:
+        noisy_const_enigma = ciphers.make_const_enigma(noise_proportion=noise_proportion)
+        super().__init__(noisy_const_enigma, data, max_length)
+
+
+class ByT5NoisyVignere2Dataset(ByT5DatasetOnlyPreprocessCiphertext):
+    """
+    Dataset using noisy 2-letter Vignere cipher.
+    """
+
+    def __init__(self, data, max_length, noise_proportion=.15) -> None:
+        super().__init__(functools.partial(ciphers.noisy_random_vignere2, noise_proportion=noise_proportion), data, max_length)

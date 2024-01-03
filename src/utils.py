@@ -16,12 +16,13 @@ def download_newscrawl(year=2012, language="en") -> None:
     newscrawl_url = f"https://data.statmt.org/news-crawl/{language}/"
     filename = f"news.{year}.{language}.shuffled.deduped.gz"
     url = newscrawl_url + filename
-    logging.info(f"Downloading {filename} from {url}")
+    logging.info("Downloading %s from %s", filename, url)
     os.system(f"wget {url}")
     os.system(f"gunzip {filename}")
     logging.info(
-        f"Downloaded and extracted {filename}",
-        f"full path: {os.path.abspath(filename)}",
+        "Downloaded and extracted %s, full path: %s",
+        filename,
+        os.path.abspath(filename),
     )
 
 
@@ -86,7 +87,7 @@ def create_detect_language(lang="en"):
     def detect_language(text):
         # print('\n' in text.strip())
         # return 'aabb'
-        detected = model.predict(text.strip())[0][0][-2:]   # the last two characters are the language in the label
+        detected = model.predict(text.strip())[0][0][-2:]   # type: ignore # the last two characters are the language in the label
         return detected == lang
     
     return detect_language

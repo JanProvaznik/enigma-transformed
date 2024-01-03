@@ -1,6 +1,7 @@
 import random
 import logging
 import re
+from typing import Optional
 from unidecode import unidecode
 
 
@@ -46,7 +47,7 @@ def generate_random_dataset(
 
 
 def load_dataset(
-    rows: int, min_length: int, max_length: int, file_path: str, seed: int = 42, exclude_length: int = None
+    rows: int, min_length: int, max_length: int, file_path: str, seed: int = 42, exclude_length: Optional[int] = None
 ) -> list[str]:
     """Samples a dataset from a file and truncates each rows to a random length generated for it from a range.
 

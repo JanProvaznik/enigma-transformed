@@ -196,7 +196,7 @@ def random_vignere(text: str, key_length: int) -> str:
 
 
 def noisy_random_vignere(
-    text: str, key_length: int, noise_proportion: float = 0.1
+    text: str, key_length: int, noise_proportion: float = 0.15
 ) -> str:
     """Vigenère cipher with a random key of specified length and noise."""
     noisy_text = add_noise_to_text(text, noise_proportion)
@@ -213,11 +213,11 @@ def random_vignere3(text: str) -> str:
     return random_vignere(text, 3)
 
 
-def noisy_random_vignere2(text: str, noise_proportion: float = 0.1) -> str:
+def noisy_random_vignere2(text: str, noise_proportion: float = 0.15) -> str:
     """Vigenère cipher with a random 2-letter key and noise."""
     return noisy_random_vignere(text, 2, noise_proportion)
 
 
-def noisy_random_vignere3(text: str, noise_proportion: float = 0.1) -> str:
+def noisy_random_vignere3(text: str, noise_proportion: float = 0.15) -> str:
     """Vigenère cipher with a random 3-letter key and noise."""
     return noisy_random_vignere(text, 3, noise_proportion)
