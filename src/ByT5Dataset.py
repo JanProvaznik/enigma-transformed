@@ -16,14 +16,14 @@ class ByT5Dataset(Dataset):
     """
 
     def __init__(
-        self, ciphertext_preprocess_fn, plaintext_preprocess_fn, dataset, max_length
+        self, ciphertext_preprocess_fn, plaintext_preprocess_fn, data, max_length
     ) -> None:
         self.tokenizer: ByT5Tokenizer = ByT5Tokenizer.from_pretrained(
             "google/byt5-small"
         )
         # apply preprocessing functions to dataset
-        self.input = [ciphertext_preprocess_fn(x) for x in dataset]
-        self.output = [plaintext_preprocess_fn(x) for x in dataset]
+        self.input = [ciphertext_preprocess_fn(x) for x in data]
+        self.output = [plaintext_preprocess_fn(x) for x in data]
 
         self.max_length = max_length
 
@@ -193,7 +193,7 @@ class ByT5NoisyConstEnigmaDataset(ByT5DatasetOnlyPreprocessCiphertext):
     Dataset using Enigma cipher with a constant key and noise.
     """
 
-    def __init__(self, data, max_length, noise_proportion=.1) -> None:
+    def __init__(self, data, max_length, noise_proportion=.15) -> None:
         noisy_const_enigma = ciphers.make_const_enigma(noise_proportion=noise_proportion)
         super().__init__(noisy_const_enigma, data, max_length)
 
@@ -205,3 +205,11 @@ class ByT5NoisyVignere2Dataset(ByT5DatasetOnlyPreprocessCiphertext):
 
     def __init__(self, data, max_length, noise_proportion=.15) -> None:
         super().__init__(functools.partial(ciphers.noisy_random_vignere2, noise_proportion=noise_proportion), data, max_length)
+
+class ByT5NoisyVignere3Dataset(ByT5DatasetOnlyPreprocessCiphertext):
+    """
+    Dataset using noisy 3-letter Vignere cipher.
+    """
+
+    def __init__(self, data, max_length, noise_proportion=.15) -> None:
+        super().__init__(functools.partial(ciphers.noisy_random_vignere3, noise_proportion=noise_proportion), data, max_length)

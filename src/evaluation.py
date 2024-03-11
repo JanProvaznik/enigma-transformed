@@ -32,6 +32,6 @@ class Model:
 
     def path(self):
         if self.is_checkpoint:
-            return f"./logs/{self.slurm_id}/output/checkpoint-{self.checkpoint_step}"
+            return f"./logs/slurm_{self.slurm_id}/output/checkpoint-{self.checkpoint_step}"
         else:
             return f"./logs/{self.slurm_id}/model"

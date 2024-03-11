@@ -1,7 +1,8 @@
 #!/bin/sh
 #SBATCH --partition=gpu
-#SBATCH --gres=gpu:1
-#SBATCH --cpus-per-task=1
+#SBATCH --gres=gpu:4
+#SBATCH --nodelist=gpu-node2
+#SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 set -eux
 date
