@@ -17,7 +17,9 @@ jupyter nbconvert --to python "$name"
 
 script_name=script_"$SLURM_JOB_ID".py
 mv "$name_without_extension".py "$logdir"/"$script_name"
-python "$logdir"/"$script_name"
+
+echo "$@"
+python "$logdir"/"$script_name" "$@"
 
 
 # copy the script to the log directory, with appended slurm job id
