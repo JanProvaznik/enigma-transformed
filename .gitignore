@@ -1,4 +1,5 @@
 *.deduped
+*.csv
 *.gz
 wandb
 logs
